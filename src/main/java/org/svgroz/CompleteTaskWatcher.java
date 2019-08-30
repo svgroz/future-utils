@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
@@ -13,13 +14,19 @@ public class CompleteTaskWatcher<T> implements TaskWatcher<WatcherTask<T>>, Runn
 
     private volatile boolean isTerminated = false;
 
+    private final Long splitBySize;
     private final ExecutorService executorService;
     private final Collection<WatcherTask<T>> tasks;
 
     private CompleteTaskWatcher(
+            final Long splitBySize,
             final ExecutorService executorService,
             final Collection<WatcherTask<T>> tasks
     ) {
+        Objects.requireNonNull(splitBySize, "splitBySize should be not null");
+        Objects.requireNonNull(executorService, "executorService should be not null");
+        Objects.requireNonNull(tasks, "tasks should be not null");
+        this.splitBySize = splitBySize;
         this.executorService = executorService;
         this.tasks = tasks;
     }
@@ -47,7 +54,7 @@ public class CompleteTaskWatcher<T> implements TaskWatcher<WatcherTask<T>>, Runn
 
         ArrayList<WatcherTask<T>> ts = new ArrayList<>();
         for (WatcherTask<T> task : tasks) {
-            if (ts.size() == 4) {
+            if (ts.size() == splitBySize) {
                 executorService.submit(
                         new CompleteTaskWatcherSubTask<>(
                                 UUID.randomUUID(),
