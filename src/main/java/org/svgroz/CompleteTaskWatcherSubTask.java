@@ -36,7 +36,9 @@ public class CompleteTaskWatcherSubTask<T> implements Runnable {
             next.accept(iterator::remove);
         }
 
-        if (!tasks.isEmpty()) {
+        if (tasks.isEmpty()) {
+            LOGGER.debug("CompleteTaskWatcherSubTask with id={} is fully completed", id);
+        } else {
             executorService.submit(this);
         }
     }
