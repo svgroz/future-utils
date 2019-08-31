@@ -12,23 +12,20 @@ import java.util.concurrent.ExecutorService;
 public class CompleteTaskWatcher<T> implements TaskWatcher<WatcherTask<T>> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CompleteTaskWatcher.class);
 
-    private volatile boolean isTerminated = false;
-
     private final Long splitBySize;
-    private final ExecutorService executorService;
 
     public CompleteTaskWatcher(
-            final Long splitBySize,
-            final ExecutorService executorService
+            final Long splitBySize
     ) {
         Objects.requireNonNull(splitBySize, "splitBySize should be not null");
-        Objects.requireNonNull(executorService, "executorService should be not null");
         this.splitBySize = splitBySize;
-        this.executorService = executorService;
     }
 
 
-    public void makeSubTasks(Collection<WatcherTask<T>> tasks) {
+    public void makeSubTasks(
+            final Collection<WatcherTask<T>> tasks,
+            final ExecutorService watchOn
+    ) {
         if (tasks.isEmpty()) {
             return;
         }
@@ -36,10 +33,10 @@ public class CompleteTaskWatcher<T> implements TaskWatcher<WatcherTask<T>> {
         ArrayList<WatcherTask<T>> ts = new ArrayList<>();
         for (WatcherTask<T> task : tasks) {
             if (ts.size() == splitBySize) {
-                executorService.submit(
+                watchOn.submit(
                         new CompleteTaskWatcherSubTask<>(
                                 UUID.randomUUID(),
-                                executorService,
+                                watchOn,
                                 ts
                         )
                 );
@@ -49,10 +46,10 @@ public class CompleteTaskWatcher<T> implements TaskWatcher<WatcherTask<T>> {
             ts.add(task);
         }
 
-        executorService.submit(
+        watchOn.submit(
                 new CompleteTaskWatcherSubTask<>(
                         UUID.randomUUID(),
-                        executorService,
+                        watchOn,
                         ts
                 )
         );

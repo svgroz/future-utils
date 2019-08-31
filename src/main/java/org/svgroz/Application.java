@@ -23,8 +23,7 @@ public class Application {
 
         ExecutorService executorService1 = Executors.newFixedThreadPool(10);
         CompleteTaskWatcher<Future<String>> futureCompleteTaskWatcher = new CompleteTaskWatcher<>(
-                10L,
-                executorService1
+                10L
         );
 
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -34,7 +33,7 @@ public class Application {
             return s;
         });
 
-        futureCompleteTaskWatcher.makeSubTasks(Collections.singleton(futureWatcherTask));
+        futureCompleteTaskWatcher.makeSubTasks(Collections.singleton(futureWatcherTask), executorService1);
 
         logger.info("Completable future await");
 
