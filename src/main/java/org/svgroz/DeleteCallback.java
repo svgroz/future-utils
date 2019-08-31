@@ -2,5 +2,5 @@ package org.svgroz;
 
 @FunctionalInterface
 public interface DeleteCallback {
-    void delete();
+    void delete(Object id);
 }

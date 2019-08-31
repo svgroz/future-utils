@@ -32,10 +32,10 @@ public class FutureWatcherTask<T> extends WatcherTask<Future<T>> {
                 LOGGER.warn("Task with id={} throw exception on get and removed from watched queue", id);
                 onComplete.completeExceptionally(e);
             } finally {
-                deleteCallback.delete();
+                deleteCallback.delete(id);
             }
         } else if (watchedOn.isCancelled()) {
-            deleteCallback.delete();
+            deleteCallback.delete(id);
             LOGGER.debug("Task with id={} canceled", id);
         }
     }

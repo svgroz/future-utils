@@ -1,18 +1,33 @@
 package org.svgroz;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.*;
 
-public class Application {
-    static Logger logger = LoggerFactory.getLogger(Application.class);
+public class CompleteTaskWatcherTest {
+    private ExecutorService executeOn;
 
-    public static void main(String[] args) throws Exception {
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        Future<String> submit = executorService.submit(() -> "fooBar");
+    @Before
+    public void before() {
+        this.executeOn = Executors.newFixedThreadPool(12);
+    }
+
+
+    @After
+    public void after() {
+        if (this.executeOn != null) {
+            this.executeOn.shutdown();
+        }
+    }
+
+    @Test
+    public void test1() throws Exception {
+        Future<String> submit = executeOn.submit(() -> "fooBar");
 
         final CompletableFuture<String> completableFuture = new CompletableFuture<>();
         FutureWatcherTask<String> futureWatcherTask = new FutureWatcherTask<>(
@@ -21,7 +36,6 @@ public class Application {
                 completableFuture
         );
 
-        ExecutorService executorService1 = Executors.newFixedThreadPool(10);
         CompleteTaskWatcher<Future<String>> futureCompleteTaskWatcher = new CompleteTaskWatcher<>(
                 10L
         );
@@ -33,14 +47,10 @@ public class Application {
             return s;
         });
 
-        futureCompleteTaskWatcher.makeSubTasks(Collections.singleton(futureWatcherTask), executorService1);
-
-        logger.info("Completable future await");
+        futureCompleteTaskWatcher.addTasks(Collections.singleton(futureWatcherTask), executeOn);
 
         countDownLatch.await();
 
-        logger.info("Application completed");
-        executorService.shutdown();
-        executorService1.shutdown();
+        Assert.assertEquals("fooBar", completableFuture.get());
     }
 }

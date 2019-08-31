@@ -21,21 +21,29 @@ public class CompleteTaskWatcher<T> implements TaskWatcher<WatcherTask<T>> {
         this.splitBySize = splitBySize;
     }
 
-
-    public void makeSubTasks(
+    @Override
+    public void addTasks(
             final Collection<WatcherTask<T>> tasks,
-            final ExecutorService watchOn
+            final ExecutorService executorService
     ) {
+        Objects.requireNonNull(tasks, "tasks should be not null");
+        Objects.requireNonNull(executorService, "executorService should be not null");
         if (tasks.isEmpty()) {
             return;
         }
+        makeSubTasks(tasks, executorService);
+    }
 
+    private void makeSubTasks(
+            final Collection<WatcherTask<T>> tasks,
+            final ExecutorService watchOn
+    ) {
         ArrayList<WatcherTask<T>> ts = new ArrayList<>();
         for (WatcherTask<T> task : tasks) {
             if (ts.size() == splitBySize) {
                 watchOn.submit(
                         new CompleteTaskWatcherSubTask<>(
-                                UUID.randomUUID(),
+                                task.id,
                                 watchOn,
                                 ts
                         )

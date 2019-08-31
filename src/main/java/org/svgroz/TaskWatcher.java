@@ -1,5 +1,13 @@
 package org.svgroz;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.concurrent.ExecutorService;
+
 public interface TaskWatcher<T> {
-//    void addTask(T task);
+    default void addTask(T task, ExecutorService executorService) {
+        addTasks(Arrays.asList(task), executorService);
+    }
+
+    void addTasks(Collection<T> tasks, ExecutorService executorService);
 }
