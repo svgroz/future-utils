@@ -3,10 +3,7 @@ package org.svgroz;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 
 public class CompleteTaskWatcher<T> implements TaskWatcher<WatcherTask<T>> {
@@ -38,6 +35,21 @@ public class CompleteTaskWatcher<T> implements TaskWatcher<WatcherTask<T>> {
             final Collection<WatcherTask<T>> tasks,
             final ExecutorService watchOn
     ) {
+        if (tasks.isEmpty()) {
+            return;
+        }
+
+        if (tasks.size() <= splitBySize) {
+            watchOn.submit(
+                    new CompleteTaskWatcherSubTask<>(
+                            UUID.randomUUID(),
+                            watchOn,
+                            List.copyOf(tasks)
+                    )
+            );
+            return;
+        }
+
         ArrayList<WatcherTask<T>> ts = new ArrayList<>();
         for (WatcherTask<T> task : tasks) {
             if (ts.size() == splitBySize) {
