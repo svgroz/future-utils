@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
-import java.util.function.BiConsumer;
 
 public class CompleteTaskWatcherSubTask<T> implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(CompleteTaskWatcherSubTask.class);
@@ -34,9 +33,7 @@ public class CompleteTaskWatcherSubTask<T> implements Runnable {
         final Iterator<WatcherTask<T>> iterator = tasks.iterator();
         while (iterator.hasNext()) {
             final WatcherTask<T> next = iterator.next();
-            final T watchedOn = next.getWatchedOn();
-            final BiConsumer<T, DeleteCallback<T>> consumer = next.getConsumer();
-            consumer.accept(watchedOn, (watchedOnX) -> iterator.remove());
+            next.accept(iterator::remove);
         }
 
         if (!tasks.isEmpty()) {

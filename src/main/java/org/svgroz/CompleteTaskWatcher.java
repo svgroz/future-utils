@@ -9,45 +9,26 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
-public class CompleteTaskWatcher<T> implements TaskWatcher<WatcherTask<T>>, Runnable {
+public class CompleteTaskWatcher<T> implements TaskWatcher<WatcherTask<T>> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CompleteTaskWatcher.class);
 
     private volatile boolean isTerminated = false;
 
     private final Long splitBySize;
     private final ExecutorService executorService;
-    private final Collection<WatcherTask<T>> tasks;
 
-    private CompleteTaskWatcher(
+    public CompleteTaskWatcher(
             final Long splitBySize,
-            final ExecutorService executorService,
-            final Collection<WatcherTask<T>> tasks
+            final ExecutorService executorService
     ) {
         Objects.requireNonNull(splitBySize, "splitBySize should be not null");
         Objects.requireNonNull(executorService, "executorService should be not null");
-        Objects.requireNonNull(tasks, "tasks should be not null");
         this.splitBySize = splitBySize;
         this.executorService = executorService;
-        this.tasks = tasks;
     }
 
-    @Override
-    public void addTask(final WatcherTask<T> task) {
-        tasks.add(task);
-    }
 
-    @Override
-    public void run() {
-        if (isTerminated) {
-            return;
-        }
-
-        makeSubTasks();
-
-        executorService.submit(this);
-    }
-
-    private void makeSubTasks() {
+    public void makeSubTasks(Collection<WatcherTask<T>> tasks) {
         if (tasks.isEmpty()) {
             return;
         }
@@ -68,10 +49,6 @@ public class CompleteTaskWatcher<T> implements TaskWatcher<WatcherTask<T>>, Runn
             ts.add(task);
         }
 
-        if (ts.isEmpty()) {
-            return;
-        }
-
         executorService.submit(
                 new CompleteTaskWatcherSubTask<>(
                         UUID.randomUUID(),
@@ -79,9 +56,5 @@ public class CompleteTaskWatcher<T> implements TaskWatcher<WatcherTask<T>>, Runn
                         ts
                 )
         );
-    }
-
-    public void terminate() {
-        this.isTerminated = true;
     }
 }
